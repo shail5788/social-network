@@ -1,0 +1,87 @@
+<?php 
+  error_reporting(1);
+  include_once("config.php");
+  include_once("library/core_class.php");
+  include_once("library/twitteroauth/autoload.php");
+  require_once("library/TwitterTextFormatter.php");
+
+  use Abraham\TwitterOAuth\TwitterOAuth;
+  use Netgloo\TwitterTextFormatter;
+
+  $connection=new TwitterOAuth(CONSUMER_KEY,CONSUMER_SECRET,TOKEN,TOKEN_SECRET);
+  $content= $connection->get("account/verify_credentials");
+  $tweets=$connection->get("statuses/home_timeline",
+  						["count"=>100,"exclude_replies"=>true]);
+ 
+  $instagram=new InstagramClass(CLIENTID,ACCESSTOKEN,APIURL);
+  $insta_feeds=json_decode($instagram->get_instagram_post());
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Social Media</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+	<link rel="stylesheet" href="http://phpmi2.delivery-projects.com/wp-content/themes/auditoire/assets/css/main.css?ver=1.1">
+	<style type="text/css">
+		.padding5{ padding: 5px;}
+		.col-sm-6 img{ width: 100%;}
+		.masonry { /* Masonry container */
+		  column-count: 2;
+		  column-gap:1%;
+		}
+
+		.masonry-col { /* Masonry bricks or child elements */
+		  background-color: #fff;
+		  display: inline-block;
+		  padding:2%;
+		  width: 100%;
+			margin-bottom: 2%;
+		}
+		.masonry-col li{ list-style-type: none;}
+	</style>
+</head>
+<body>
+   <div class="container">
+	   <div class="inner-container">
+   	  <div class="row">
+   	      <?php  foreach ($insta_feeds->data as $insta) {?>
+   	     <div class="col-sm-6 padding5">
+		    <div class="thumbnail">
+		       <img src="<?php echo $insta->images->standard_resolution->url; ?>" >
+		      <div class="caption">
+		        <h3><?php echo $insta->caption->text; ?></h3>
+		        <p><span class="likes"><span>Likes</span><?php echo $insta->likes->count; ?></span></p>
+		      </div>
+		    </div>
+		  </div>            
+   	     <?php } ?>    	
+   	  </div>
+	   </div>
+	</div>
+	<div class="container">
+		  <div class="inner-container">
+		  <div class="row masonry">
+      <?php 
+   	    echo "<ul>";
+        foreach($tweets as $tweet){
+          echo "<div class='col-sm-6 masonry-col thumbnail'><li>";
+          echo TwitterTextFormatter::format_text($tweet) . "<br/>";
+
+          // Print also the tweet's image if is set
+          if (isset($tweet->entities->media)) {
+            $media_url = $tweet->entities->media[0]->media_url;
+             echo "<img src='{$media_url}'  />";
+          }
+
+          echo "</li></div>";
+        }   
+        echo "</ul>"; 
+
+    ?>
+		</div>	  
+   </div>
+	</div> 	
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+</body>
+</html>

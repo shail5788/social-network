@@ -1,0 +1,174 @@
+<?php 
+  error_reporting(1);
+  include_once("config.php");
+  include_once("library/core_class.php");
+  include_once("library/twitteroauth/autoload.php");
+  require_once("library/TwitterTextFormatter.php");
+  require_once 'library/facebook/src/Facebook/autoload.php';
+  require_once 'library/facebook/src/Facebook/Exceptions/FacebookResponseException.php';
+  require_once 'library/facebook/src/Facebook/Exceptions/FacebookSDKException.php';
+  require_once 'library/facebook/src/Facebook/Helpers/FacebookRedirectLoginHelper.php';
+
+  use Abraham\TwitterOAuth\TwitterOAuth;
+  use Netgloo\TwitterTextFormatter;
+  use Facebook\Facebook;
+  use Facebook\Exceptions\FacebookResponseException;
+  use Facebook\Exceptions\FacebookSDKException;
+
+    $appId = "163746873701765";
+    $appSecret = "de24adde0e96ad77d5fbdab43a725c34";
+    // $appId = "662278054181513";
+    // $appSecret = "9efbb74c3bd889143a65cb5f849a28f7";
+    $fb = new Facebook([
+        'app_id' => $appId,
+        'app_secret' => $appSecret,
+        'default_graph_version' => 'v3.1'
+    ]);
+    $id="897487457271709";
+
+    $accessToken='EAACU7Uo9dYUBAMvSiaMJZBfjZBixCVFOkCwVP2IDZC0Tr5ZCNaUldZCjnzNZAnNssZCGAvgesPkKnPh0oZCSZBnBZAilInMZAcNmlmTeBvDN5zn6qo56CHNO4HSZA8ptZCtt9lMClceX5D16Uyo0MWSP5MwF4YyoVBrC34efhLg6ADOfquAZDZD';
+    // $accessToken='EAAEteP1sZA4wBAJmtSlPqblEMZAXBA5ZBPM1U2PkFgVlZBTwBG0Y5cMVOzzWM5rPQFSCqNUxbaj5eP0KgGKonkR3i8zXZAG0VfmiygN71s2LM6I21vUgdGjKKVAZBsfh09ldZCclpzwlxGqTfQOrXyb0ZBsecXWxBSQZD';
+    $postData = "";
+    try {
+       
+        // $accessToken = $helper->getAccessToken();  
+        $userPosts =$fb->get("/897487457271709/feed?fields=id,message,link,name,description,type,icon,source,picture,likes.summary(1).limit(0)&amp;", $accessToken);
+        $postBody = $userPosts->getDecodedBody();
+
+        $postData = $postBody["data"];
+        // print_r(json_encode($postData));
+    } catch (FacebookResponseException $e) {
+        echo $e;
+        exit();
+    } catch (FacebookSDKException $e) {
+       //echo $e;
+         //display error message
+        exit();
+    }
+
+
+
+  $connection=new TwitterOAuth(CONSUMER_KEY,CONSUMER_SECRET,TOKEN,TOKEN_SECRET);
+  $content= $connection->get("account/verify_credentials");
+  $tweets=$connection->get("statuses/home_timeline",
+  						["count"=>100,"exclude_replies"=>true]);
+ 
+
+  $instagram=new InstagramClass(CLIENTID,ACCESSTOKEN,APIURL);
+  $insta_feeds=json_decode($instagram->get_instagram_post());
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Social Media</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+	<link rel="stylesheet" href="http://phpmi2.delivery-projects.com/wp-content/themes/auditoire/assets/css/main.css?ver=1.1">
+	<style type="text/css">
+		.padding5{ padding: 5px;}
+		.col-sm-6 img{ width: 100%;}
+		.col-sm-6 {
+			width: 49%;
+			margin: .5%;
+		}
+		/*.masonry {
+		  column-count: 2;
+		  column-gap:1%;
+		}*/
+
+		/*.masonry-col { 
+		  background-color: #fff;
+		  display: inline-block;
+		  padding:2%;
+		  width: 100%;
+			margin-bottom: 2%;
+		}*/
+		.masonry-col li{ list-style-type: none;}
+		.post-icon{ display: none;}
+		.post-icon img{ width: auto; }
+		.post-message{ margin-bottom: 2%}
+		.post-message iframe{ width: 100%;}
+		.margintop10{ margin-top: 10px;}
+	</style>
+</head>
+<body>
+   <div class="container">
+	   <div class="inner-container">
+   	  <div class="row">
+   	      <?php  foreach ($insta_feeds->data as $insta) {?>
+   	     <div class="col-sm-6 padding5">
+		    <div class="thumbnail">
+		       <img src="<?php echo $insta->images->standard_resolution->url; ?>" >
+		      <div class="caption">
+		        <h3><?php echo $insta->caption->text; ?></h3>
+		        <p><span class="likes"><span>Likes</span><?php echo $insta->likes->count; ?></span></p>
+		      </div>
+		    </div>
+		  </div>            
+   	     <?php } ?>    	
+   	  </div>
+	   </div>
+	</div>
+	<div class="container">
+		  <div class="inner-container">
+		  <div class="row masonry">
+      <?php 
+   	    echo "<ul>";
+        foreach($tweets as $tweet){
+          echo "<div class='col-sm-6 masonry-col thumbnail'><li>";
+          echo TwitterTextFormatter::format_text($tweet) . "<br/>";
+
+          // Print also the tweet's image if is set
+          if (isset($tweet->entities->media)) {
+            $media_url = $tweet->entities->media[0]->media_url;
+             echo "<img src='{$media_url}'  />";
+          }
+
+          echo "</li></div>";
+        }   
+        echo "</ul>"; 
+
+    ?>
+		</div>	  
+   </div>
+	</div> 	
+  <div class="container">
+	  <div class="inner-container">
+		  <div class="row">
+			  <div class="col-sm-6 clear-padding margintop10">
+				  <div class="thumbnail">
+      <?php
+          if (! empty($postData)) {
+              // foreach ($postData as $k => $v) {
+                  
+          ?>
+          <div class="post-item">
+          <div class="post-message">
+            <?php 
+                  if(!empty($postData[0]["type"]) && $postData[0]['type']=="video"){
+                     echo "<iframe width='420' height='315' src='".$postData[0]['source']."'>
+                  </iframe>";
+                   }else if(!empty($postData[0]["type"]) && $postData[0]['type']=="photo"){
+                       echo "<img src='".$postData[0]['picture']."'>";
+                   } ?>
+          </div>
+          <div class="post-name"><h3><?php echo $postData[0]['name']; ?></h3></div>
+          <div class="post-name"><span><?php echo $postData[0]['message']; ?></span></div>
+          <div class="post-date"><?php if(!empty($postData[0]["likes"])){
+              echo "<span>Likes-".$postData[0]["likes"]['summary']['total_count']."</span>";
+          }   ?></div>
+          <div class="post-icon"><?php 
+              echo "<span><img src='".$postData[0]['icon']."'</span>";  ?></div>
+          </div>
+          <?php
+              // }
+          }
+          ?>
+				  </div>
+			  </div>		  
+		  </div>
+	  </div>
+  </div>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+</body>
+</html>

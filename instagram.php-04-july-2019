@@ -1,0 +1,55 @@
+<?php 
+  error_reporting(1);
+  include_once("config.php");
+  include_once("library/core_class.php");
+  include_once("library/twitteroauth/autoload.php");
+
+  use Abraham\TwitterOAuth\TwitterOAuth;
+  $connection=new TwitterOAuth(CONSUMER_KEY,CONSUMER_SECRET,TOKEN,TOKEN_SECRET);
+  $content= $connection->get("account/verify_credentials");
+  $tweets=$connection->get("statuses/home_timeline",
+  						["count"=>25,"exclude_replies"=>true]);
+  print_r(json_encode($tweets));
+  $instagram=new InstagramClass(CLIENTID,ACCESSTOKEN,APIURL);
+  $insta_feeds=json_decode($instagram->get_instagram_post());
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Social Media</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+</head>
+<body>
+   <div class="container">
+   	  <div class="row">
+   	      <?php  foreach ($insta_feeds->data as $insta) {?>
+   	     <div class="col-sm-6 col-md-4">
+		    <div class="thumbnail">
+		       <img src="<?php echo $insta->images->standard_resolution->url; ?>" >
+		      <div class="caption">
+		        <h3><?php echo $insta->caption->text; ?></h3>
+		        <p><span class="likes"><span>Likes</span><?php echo $insta->likes->count; ?></span></p>
+		      </div>
+		    </div>
+		  </div>            
+   	     <?php } ?>    	
+   	  </div>
+   	  <div class="row">
+   	  	  <?php foreach ($tweets as $tweet) { ?>
+   	  	   <div class="col-sm-6 col-md-4">
+		    <div class="thumbnail">
+		      <!--  <img src="<?php echo $insta->images->standard_resolution->url; ?>" > -->
+		      <div class="caption">
+		        <h3><?php echo $tweet->text; ?></h3>
+		        <!-- <p><span class="likes"><span>Likes</span><?php echo $insta->likes->count; ?></span></p> -->
+		      </div>
+		    </div>
+		  </div>    
+   	  	 <?php } ?>
+   	  </div>
+   </div>
+   	
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+</body>
+</html>
